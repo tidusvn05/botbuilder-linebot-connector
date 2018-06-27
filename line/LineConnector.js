@@ -14,8 +14,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
         while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
+            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [0, t.value];
             switch (op[0]) {
                 case 0: case 1: t = op; break;
                 case 4: _.label++; return { value: op[1], done: false };
@@ -34,7 +34,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 var fetch = require('node-fetch');
 var crypto = require('crypto');
 var url = require('url');
@@ -44,6 +44,12 @@ var VERIFY_TOKENS = [
     '00000000000000000000000000000000',
     'ffffffffffffffffffffffffffffffff'
 ];
+var lineOpts = {
+    template: {
+        maxLengthTitle: 40,
+        maxLengthText: 60
+    }
+};
 var Sticker = /** @class */ (function () {
     function Sticker(session, packageId, stickerId) {
         this.packageId = packageId.toString();
@@ -403,6 +409,11 @@ var LineConnector = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        console.log("message:", message);
+                        if (!message) {
+                            console.log("empty message");
+                            return [2 /*return*/];
+                        }
                         m = LineConnector.createMessages(message);
                         body = {
                             to: toId,
@@ -505,7 +516,7 @@ var LineConnector = /** @class */ (function () {
                         }
                         url = "/" + (this.conversationType === "group" ? "group" : this.conversationType === "room" ? "room" : "") + "/" + this.conversationId + "/leave";
                         body = {
-                            replyToken: this.replyToken,
+                            replyToken: this.replyToken
                         };
                         return [4 /*yield*/, this.post(url, body).then()];
                     case 1:
@@ -528,7 +539,7 @@ var LineConnector = /** @class */ (function () {
                 return {
                     "type": "postback",
                     "label": b.title,
-                    "data": b.value,
+                    "data": b.value
                 };
             }
             else if (b.type === 'openUrl') {
@@ -547,7 +558,7 @@ var LineConnector = /** @class */ (function () {
                     "mode": "datetime",
                     "initial": new Date(new Date().getTime() - (1000 * 60 * new Date().getTimezoneOffset())).toISOString().substring(0, new Date().toISOString().length - 8),
                     "max": new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 30 * 12)).toISOString().substring(0, new Date().toISOString().length - 8),
-                    "min": new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 30 * 12)).toISOString().substring(0, new Date().toISOString().length - 8),
+                    "min": new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 30 * 12)).toISOString().substring(0, new Date().toISOString().length - 8)
                 };
                 if (b.value) {
                     var d = JSON.parse(b.value);
@@ -610,6 +621,7 @@ var LineConnector = /** @class */ (function () {
                     };
                 }
                 else if (event.attachments) {
+                    console.log("attachments ****");
                     if (event.attachmentLayout === 'carousel') {
                         //for carousel
                         //for image carousel
@@ -666,9 +678,14 @@ var LineConnector = /** @class */ (function () {
                                         imageAspectRatio: "rectangle",
                                         imageSize: "cover",
                                         columns: event.attachments.map(function (a) {
+                                            //console.log("----", a);
+                                            // Auto split text if too length.
+                                            var text = a.content.text ? a.content.text : (a.content.subtitle ? a.content.subtitle : "");
+                                            text = text.slice(0, lineOpts.template.maxLengthText);
+                                            var title = a.content.title.slice(0, lineOpts.template.maxLengthTitle);
                                             var c = {
-                                                title: a.content.title || "",
-                                                text: "" + (a.content.title || "") + (a.content.subtitle || ""),
+                                                title: title,
+                                                text: text,
                                                 actions: a.content.buttons.map(function (b) {
                                                     return getButtonTemp(b);
                                                 })
@@ -777,6 +794,7 @@ var LineConnector = /** @class */ (function () {
         }
     };
     LineConnector.prototype.send = function (messages, done) {
+        console.log(" >>> send line messsage", messages);
         // let ts = [];
         var _this = this;
         messages.map(function (e, i) {
@@ -786,7 +804,7 @@ var LineConnector = /** @class */ (function () {
                 return address;
             }
             if (_this.hasPushApi) {
-                _this.conversationId = e.address.channelId;
+                _this.conversationId = e.address.channelId ? e.address.channelId : e.address.channel.id;
                 _this.push(_this.conversationId, _this.getRenderTemplate(e));
             }
             else if (_this.replyToken) {
@@ -817,4 +835,3 @@ var LineConnector = /** @class */ (function () {
     return LineConnector;
 }());
 exports.LineConnector = LineConnector;
-//# sourceMappingURL=LineConnector.js.map

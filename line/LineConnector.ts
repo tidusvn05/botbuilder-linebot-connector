@@ -11,6 +11,13 @@ const VERIFY_TOKENS = [
     'ffffffffffffffffffffffffffffffff'
 ]
 
+const lineOpts = {
+  template: {
+    maxLengthTitle: 40,
+    maxLengthText: 60,
+  }
+};
+
 export class Sticker implements botbuilder.IIsAttachment {
     packageId;
     stickerId;
@@ -394,8 +401,12 @@ export class LineConnector implements botbuilder.IConnector {
     }
 
     private async push(toId, message) {
+        console.log("message:", message);
+        if (!message) {
+          console.log("empty message");
+          return;
+        }
         let m = LineConnector.createMessages(message);
-
         const body = {
             to: toId,
             messages: m
@@ -565,7 +576,7 @@ export class LineConnector implements botbuilder.IConnector {
                         text: event.text
                     }
                 } else if (event.attachments) {
-
+                    console.log("attachments ****");
                     if (event.attachmentLayout === 'carousel') {
                         //for carousel
                         //for image carousel
@@ -604,6 +615,7 @@ export class LineConnector implements botbuilder.IConnector {
                                     "template": {
                                         "type": "image_carousel",
                                         "columns": event.attachments.map(a => {
+                                          
                                             return {
                                                 imageUrl: a.content.images[0].url,
                                                 action: getButtonTemp(a.content.buttons[0])
@@ -621,9 +633,15 @@ export class LineConnector implements botbuilder.IConnector {
                                         imageSize: "cover",
 
                                         columns: event.attachments.map(a => {
+                                            //console.log("----", a);
+                                            // Auto split text if too length.
+                                            let text = a.content.text ?  a.content.text : (a.content.subtitle ? a.content.subtitle : "");
+                                            text = text.slice(0, lineOpts.template.maxLengthText);
+                                            let title = a.content.title.slice(0, lineOpts.template.maxLengthTitle);
+
                                             let c: any = {
-                                                title: a.content.title || "",
-                                                text: `${a.content.title || ""}${a.content.subtitle || ""}`,
+                                                title,
+                                                text,
                                                 actions: a.content.buttons.map(b =>
                                                     getButtonTemp(b)
                                                 )
@@ -753,6 +771,7 @@ export class LineConnector implements botbuilder.IConnector {
         }
     }
     send(messages: botbuilder.IMessage[], done) {
+      console.log(" >>> send line messsage", messages);
         // let ts = [];
         const _this = this;
 
@@ -764,7 +783,7 @@ export class LineConnector implements botbuilder.IConnector {
             }
             
             if (_this.hasPushApi) {
-                _this.conversationId = e.address.channelId;
+                _this.conversationId = e.address.channelId ? e.address.channelId : e.address.channel.id;
                 _this.push(_this.conversationId, _this.getRenderTemplate(e))
             } else if (_this.replyToken) {
                 let t = _this.getRenderTemplate(e)

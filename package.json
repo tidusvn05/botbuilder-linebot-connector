@@ -7,6 +7,7 @@
     "dev/app": "tsc --watch & nodemon  ./app.js"
   },
   "dependencies": {
+    "@types/es6-promise": "^3.3.0",
     "body-parser": "^1.18.2",
     "botbuilder": "^3.13.1",
     "express": "^4.16.2",
