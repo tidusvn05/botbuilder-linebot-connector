@@ -1,5 +1,5 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 var express = require('express');
 var config = require("./conf");
 var builder = require("botbuilder");
@@ -93,4 +93,3 @@ bot.dialog("leave", [
 ]).triggerAction({
     matches: /^leave$/i
 });
-//# sourceMappingURL=bot.js.map

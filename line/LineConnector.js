@@ -34,10 +34,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 var fetch = require('node-fetch');
 var crypto = require('crypto');
 var url = require('url');
+var util = require('util');
 var bodyParser = require("body-parser");
 var botbuilder = require("botbuilder");
 var VERIFY_TOKENS = [
@@ -47,7 +48,7 @@ var VERIFY_TOKENS = [
 var lineOpts = {
     template: {
         maxLengthTitle: 40,
-        maxLengthText: 60
+        maxLengthText: 60,
     }
 };
 var Sticker = /** @class */ (function () {
@@ -365,15 +366,16 @@ var LineConnector = /** @class */ (function () {
         return [message];
     };
     LineConnector.prototype.post = function (path, body) {
-        console.log("post", path, body);
-        // console.log(path, body)
-        // let r;
-        // try {
-        //     r = fetch(this.endpoint + path, { method: 'POST', headers: this.headers, body: JSON.stringify(body) });
-        // } catch (er) {
-        //     console.log("er",er)
-        // }
-        return fetch(this.endpoint + path, { method: 'POST', headers: this.headers, body: JSON.stringify(body) });
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, fetch(this.endpoint + path, { method: 'POST', headers: this.headers, body: JSON.stringify(body) })];
+                    case 1: 
+                    // console.log(">> post a message:", path, body)
+                    return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
     };
     LineConnector.prototype.get = function (path) {
         // console.log("get", path);
@@ -409,7 +411,7 @@ var LineConnector = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        console.log("message:", message);
+                        // console.log(" >> push message:", util.inspect(message));
                         if (!message) {
                             console.log("empty message");
                             return [2 /*return*/];
@@ -419,10 +421,12 @@ var LineConnector = /** @class */ (function () {
                             to: toId,
                             messages: m
                         };
-                        return [4 /*yield*/, this.post('/message/push', body).then()];
+                        return [4 /*yield*/, this.post('/message/push', body)];
                     case 1:
                         res = _a.sent();
-                        r = res.json().then();
+                        return [4 /*yield*/, res.json()];
+                    case 2:
+                        r = _a.sent();
                         if (r.message) {
                             throw new Error(r.message);
                         }
@@ -516,7 +520,7 @@ var LineConnector = /** @class */ (function () {
                         }
                         url = "/" + (this.conversationType === "group" ? "group" : this.conversationType === "room" ? "room" : "") + "/" + this.conversationId + "/leave";
                         body = {
-                            replyToken: this.replyToken
+                            replyToken: this.replyToken,
                         };
                         return [4 /*yield*/, this.post(url, body).then()];
                     case 1:
@@ -539,7 +543,7 @@ var LineConnector = /** @class */ (function () {
                 return {
                     "type": "postback",
                     "label": b.title,
-                    "data": b.value
+                    "data": b.value,
                 };
             }
             else if (b.type === 'openUrl') {
@@ -558,7 +562,7 @@ var LineConnector = /** @class */ (function () {
                     "mode": "datetime",
                     "initial": new Date(new Date().getTime() - (1000 * 60 * new Date().getTimezoneOffset())).toISOString().substring(0, new Date().toISOString().length - 8),
                     "max": new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 30 * 12)).toISOString().substring(0, new Date().toISOString().length - 8),
-                    "min": new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 30 * 12)).toISOString().substring(0, new Date().toISOString().length - 8)
+                    "min": new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 30 * 12)).toISOString().substring(0, new Date().toISOString().length - 8),
                 };
                 if (b.value) {
                     var d = JSON.parse(b.value);
@@ -621,7 +625,6 @@ var LineConnector = /** @class */ (function () {
                     };
                 }
                 else if (event.attachments) {
-                    console.log("attachments ****");
                     if (event.attachmentLayout === 'carousel') {
                         //for carousel
                         //for image carousel
@@ -678,7 +681,6 @@ var LineConnector = /** @class */ (function () {
                                         imageAspectRatio: "rectangle",
                                         imageSize: "cover",
                                         columns: event.attachments.map(function (a) {
-                                            //console.log("----", a);
                                             // Auto split text if too length.
                                             var text = a.content.text ? a.content.text : (a.content.subtitle ? a.content.subtitle : "");
                                             text = text.slice(0, lineOpts.template.maxLengthText);
@@ -794,38 +796,53 @@ var LineConnector = /** @class */ (function () {
         }
     };
     LineConnector.prototype.send = function (messages, done) {
-        console.log(" >>> send line messsage", messages);
-        // let ts = [];
-        var _this = this;
-        messages.map(function (e, i) {
-            // console.log("e", e)
-            var address = e.address;
-            if (e.type === 'endOfConversation') {
-                return address;
-            }
-            if (_this.hasPushApi) {
-                _this.conversationId = e.address.channelId ? e.address.channelId : e.address.channel.id;
-                _this.push(_this.conversationId, _this.getRenderTemplate(e));
-            }
-            else if (_this.replyToken) {
-                var t = _this.getRenderTemplate(e);
-                // console.log(t)
-                if (Array.isArray(t)) {
-                    _this.event_cache = _this.event_cache.concat(t);
+        return __awaiter(this, void 0, void 0, function () {
+            var _this, _i, messages_1, e, address, t, r;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _this = this;
+                        _i = 0, messages_1 = messages;
+                        _a.label = 1;
+                    case 1:
+                        if (!(_i < messages_1.length)) return [3 /*break*/, 5];
+                        e = messages_1[_i];
+                        address = e.address;
+                        if (e.type === 'endOfConversation') {
+                            return [2 /*return*/, address];
+                        }
+                        if (!_this.hasPushApi) return [3 /*break*/, 3];
+                        _this.conversationId = e.address.channelId ? e.address.channelId : e.address.channel.id;
+                        return [4 /*yield*/, _this.push(_this.conversationId, _this.getRenderTemplate(e))];
+                    case 2:
+                        _a.sent();
+                        return [3 /*break*/, 4];
+                    case 3:
+                        if (_this.replyToken) {
+                            t = _this.getRenderTemplate(e);
+                            if (Array.isArray(t)) {
+                                _this.event_cache = _this.event_cache.concat(t);
+                            }
+                            else {
+                                _this.event_cache.push(t);
+                            }
+                            if ((_this.event_cache.length === messages.length) || _this.event_cache.length === 5) {
+                                r = (' ' + _this.replyToken).slice(1);
+                                _this.replyToken = null;
+                                _this.reply(r, _this.event_cache);
+                                _this.event_cache = [];
+                            }
+                        }
+                        else {
+                            throw new Error("no way to send message: " + e);
+                        }
+                        _a.label = 4;
+                    case 4:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 5: return [2 /*return*/];
                 }
-                else {
-                    _this.event_cache.push(t);
-                }
-                if ((_this.event_cache.length === messages.length) || _this.event_cache.length === 5) {
-                    var r = (' ' + _this.replyToken).slice(1);
-                    _this.replyToken = null;
-                    _this.reply(r, _this.event_cache);
-                    _this.event_cache = [];
-                }
-            }
-            else {
-                throw new Error("no way to send message: " + e);
-            }
+            });
         });
     };
     LineConnector.prototype.startConversation = function (address, callback) {
@@ -835,3 +852,4 @@ var LineConnector = /** @class */ (function () {
     return LineConnector;
 }());
 exports.LineConnector = LineConnector;
+//# sourceMappingURL=LineConnector.js.map

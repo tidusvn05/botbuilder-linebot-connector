@@ -2,6 +2,7 @@
 const fetch = require('node-fetch');
 const crypto = require('crypto');
 var url = require('url');
+const util = require('util');
 
 import bodyParser = require("body-parser");
 import * as botbuilder from "botbuilder";
@@ -367,17 +368,10 @@ export class LineConnector implements botbuilder.IConnector {
         }
         return [message];
     }
-    private post(path, body) {
-        console.log("post", path, body)
+    private async post(path, body) {
+        // console.log(">> post a message:", path, body)
 
-        // console.log(path, body)
-        // let r;
-        // try {
-        //     r = fetch(this.endpoint + path, { method: 'POST', headers: this.headers, body: JSON.stringify(body) });
-        // } catch (er) {
-        //     console.log("er",er)
-        // }
-        return fetch(this.endpoint + path, { method: 'POST', headers: this.headers, body: JSON.stringify(body) });
+        return await fetch(this.endpoint + path, { method: 'POST', headers: this.headers, body: JSON.stringify(body) });
     }
     private get(path) {
         // console.log("get", path);
@@ -401,7 +395,8 @@ export class LineConnector implements botbuilder.IConnector {
     }
 
     private async push(toId, message) {
-        console.log("message:", message);
+        // console.log(" >> push message:", util.inspect(message));
+        
         if (!message) {
           console.log("empty message");
           return;
@@ -412,8 +407,8 @@ export class LineConnector implements botbuilder.IConnector {
             messages: m
         };
         // console.log("body", body)
-        let res = await this.post('/message/push', body).then();
-        let r = res.json().then();
+        let res = await this.post('/message/push', body);
+        let r = await res.json();
         if (r.message) {
             throw new Error(r.message)
         }
@@ -576,7 +571,6 @@ export class LineConnector implements botbuilder.IConnector {
                         text: event.text
                     }
                 } else if (event.attachments) {
-                    console.log("attachments ****");
                     if (event.attachmentLayout === 'carousel') {
                         //for carousel
                         //for image carousel
@@ -633,7 +627,6 @@ export class LineConnector implements botbuilder.IConnector {
                                         imageSize: "cover",
 
                                         columns: event.attachments.map(a => {
-                                            //console.log("----", a);
                                             // Auto split text if too length.
                                             let text = a.content.text ?  a.content.text : (a.content.subtitle ? a.content.subtitle : "");
                                             text = text.slice(0, lineOpts.template.maxLengthText);
@@ -770,13 +763,11 @@ export class LineConnector implements botbuilder.IConnector {
                 }
         }
     }
-    send(messages: botbuilder.IMessage[], done) {
-      console.log(" >>> send line messsage", messages);
+    async send(messages: botbuilder.IMessage[], done) {
+        // console.log(" >>> send line messsage:", messages);
         // let ts = [];
         const _this = this;
-
-        messages.map((e: botbuilder.IMessage, i) => {
-            // console.log("e", e)
+        for (const e of messages) {
             const address = e.address;
             if (e.type === 'endOfConversation') {
                 return address;
@@ -784,10 +775,9 @@ export class LineConnector implements botbuilder.IConnector {
             
             if (_this.hasPushApi) {
                 _this.conversationId = e.address.channelId ? e.address.channelId : e.address.channel.id;
-                _this.push(_this.conversationId, _this.getRenderTemplate(e))
+                await _this.push(_this.conversationId, _this.getRenderTemplate(e))
             } else if (_this.replyToken) {
                 let t = _this.getRenderTemplate(e)
-                // console.log(t)
                 if (Array.isArray(t)) {
                     _this.event_cache = _this.event_cache.concat(t)
                 } else {
@@ -803,7 +793,36 @@ export class LineConnector implements botbuilder.IConnector {
             } else {
                 throw new Error(`no way to send message: ` + e);
             }
-        })
+        }
+        // return;
+        // messages.map(async (e: botbuilder.IMessage, i) => {
+        //     const address = e.address;
+        //     if (e.type === 'endOfConversation') {
+        //         return address;
+        //     }
+            
+        //     if (_this.hasPushApi) {
+        //         _this.conversationId = e.address.channelId ? e.address.channelId : e.address.channel.id;
+        //         await _this.push(_this.conversationId, _this.getRenderTemplate(e))
+        //     } else if (_this.replyToken) {
+        //         let t = _this.getRenderTemplate(e)
+        //         // console.log(t)
+        //         if (Array.isArray(t)) {
+        //             _this.event_cache = _this.event_cache.concat(t)
+        //         } else {
+        //             _this.event_cache.push(t)
+        //         }
+        //         if ((_this.event_cache.length === messages.length) || _this.event_cache.length === 5) {
+        //             let r = (' ' + _this.replyToken).slice(1);
+        //             _this.replyToken = null;
+
+        //             _this.reply(r, _this.event_cache);
+        //             _this.event_cache = [];
+        //         }
+        //     } else {
+        //         throw new Error(`no way to send message: ` + e);
+        //     }
+        // })
     }
     startConversation(address, callback) {
         console.log(address);
