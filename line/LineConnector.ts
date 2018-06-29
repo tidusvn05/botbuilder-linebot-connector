@@ -398,7 +398,7 @@ export class LineConnector implements botbuilder.IConnector {
         // console.log(" >> push message:", util.inspect(message));
         
         if (!message) {
-          console.log("empty message");
+          console.log("empty message", message);
           return;
         }
         let m = LineConnector.createMessages(message);
@@ -659,11 +659,7 @@ export class LineConnector implements botbuilder.IConnector {
                             throw new Error("do not suppoert this card,only support HeroCard ")
                         }
 
-
-
-
-
-                    }
+                    } // ./END carousel
 
                     return event.attachments.map(a => {
                         // console.log("a", a)
@@ -718,29 +714,28 @@ export class LineConnector implements botbuilder.IConnector {
                                 }
 
                                 if (a.content.images === undefined && a.content.buttons.length === 2) {
-                                    //confirm
-
+                                    //confirm template
                                     return {
                                         type: "template",
                                         altText: getAltText(a.content.text),
                                         template: {
                                             type: "confirm",
                                             title: a.content.title || "",
-                                            text: `${a.content.title || ""}${a.content.subtitle || ""}`,
+                                            text: `${a.content.subtitle || ""} ${a.content.text || ""}`,
                                             actions: a.content.buttons.map(b =>
                                                 getButtonTemp(b)
                                             )
                                         }
                                     }
                                 } else {
-
+                                    // buttons template
                                     let t: any = {
                                         type: "template",
                                         altText: a.content.text,
                                         template: {
                                             type: "buttons",
                                             title: a.content.title || "",
-                                            text: `${a.content.title || ""}${a.content.subtitle || ""}`,
+                                            text: `${a.content.subtitle || ""} ${a.content.text || ""}`,
                                             actions: a.content.buttons.map(b =>
                                                 getButtonTemp(b)
                                             )
@@ -764,7 +759,7 @@ export class LineConnector implements botbuilder.IConnector {
         }
     }
     async send(messages: botbuilder.IMessage[], done) {
-        // console.log(" >>> send line messsage:", messages);
+        console.log(" >>> send line messsage:", messages);
         // let ts = [];
         const _this = this;
         for (const e of messages) {

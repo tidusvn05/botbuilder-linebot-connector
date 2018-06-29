@@ -413,7 +413,7 @@ var LineConnector = /** @class */ (function () {
                     case 0:
                         // console.log(" >> push message:", util.inspect(message));
                         if (!message) {
-                            console.log("empty message");
+                            console.log("empty message", message);
                             return [2 /*return*/];
                         }
                         m = LineConnector.createMessages(message);
@@ -706,7 +706,7 @@ var LineConnector = /** @class */ (function () {
                         else {
                             throw new Error("do not suppoert this card,only support HeroCard ");
                         }
-                    }
+                    } // ./END carousel
                     return event.attachments.map(function (a) {
                         // console.log("a", a)
                         switch (a.contentType) {
@@ -755,14 +755,14 @@ var LineConnector = /** @class */ (function () {
                                     return new Error("need buttons data");
                                 }
                                 if (a.content.images === undefined && a.content.buttons.length === 2) {
-                                    //confirm
+                                    //confirm template
                                     return {
                                         type: "template",
                                         altText: getAltText(a.content.text),
                                         template: {
                                             type: "confirm",
                                             title: a.content.title || "",
-                                            text: "" + (a.content.title || "") + (a.content.subtitle || ""),
+                                            text: (a.content.subtitle || "") + " " + (a.content.text || ""),
                                             actions: a.content.buttons.map(function (b) {
                                                 return getButtonTemp(b);
                                             })
@@ -770,13 +770,14 @@ var LineConnector = /** @class */ (function () {
                                     };
                                 }
                                 else {
+                                    // buttons template
                                     var t = {
                                         type: "template",
                                         altText: a.content.text,
                                         template: {
                                             type: "buttons",
                                             title: a.content.title || "",
-                                            text: "" + (a.content.title || "") + (a.content.subtitle || ""),
+                                            text: (a.content.subtitle || "") + " " + (a.content.text || ""),
                                             actions: a.content.buttons.map(function (b) {
                                                 return getButtonTemp(b);
                                             })
@@ -801,6 +802,7 @@ var LineConnector = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        console.log(" >>> send line messsage:", messages);
                         _this = this;
                         _i = 0, messages_1 = messages;
                         _a.label = 1;
