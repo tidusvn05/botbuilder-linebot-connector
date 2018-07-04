@@ -34,7 +34,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 var fetch = require('node-fetch');
 var crypto = require('crypto');
 var url = require('url');
@@ -47,8 +47,25 @@ var VERIFY_TOKENS = [
 ];
 var lineOpts = {
     template: {
+        maxLengthAltText: 400,
         maxLengthTitle: 40,
         maxLengthText: 60,
+        carousel: {
+            maxLengthTitle: 40,
+            maxLengthTextNoImageOrTitle: 120,
+            maxLengthText: 60,
+            maxActions: 3
+        },
+        confirm: {
+            maxLengthText: 240,
+            maxActions: 2
+        },
+        buttons: {
+            maxLengthTitle: 40,
+            maxLengthTextNoImageOrTitle: 160,
+            maxLengthText: 60,
+            maxActions: 4
+        }
     }
 };
 var Sticker = /** @class */ (function () {
@@ -520,7 +537,7 @@ var LineConnector = /** @class */ (function () {
                         }
                         url = "/" + (this.conversationType === "group" ? "group" : this.conversationType === "room" ? "room" : "") + "/" + this.conversationId + "/leave";
                         body = {
-                            replyToken: this.replyToken,
+                            replyToken: this.replyToken
                         };
                         return [4 /*yield*/, this.post(url, body).then()];
                     case 1:
@@ -543,7 +560,7 @@ var LineConnector = /** @class */ (function () {
                 return {
                     "type": "postback",
                     "label": b.title,
-                    "data": b.value,
+                    "data": b.value
                 };
             }
             else if (b.type === 'openUrl') {
@@ -562,7 +579,7 @@ var LineConnector = /** @class */ (function () {
                     "mode": "datetime",
                     "initial": new Date(new Date().getTime() - (1000 * 60 * new Date().getTimezoneOffset())).toISOString().substring(0, new Date().toISOString().length - 8),
                     "max": new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 30 * 12)).toISOString().substring(0, new Date().toISOString().length - 8),
-                    "min": new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 30 * 12)).toISOString().substring(0, new Date().toISOString().length - 8),
+                    "min": new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 30 * 12)).toISOString().substring(0, new Date().toISOString().length - 8)
                 };
                 if (b.value) {
                     var d = JSON.parse(b.value);
@@ -683,8 +700,8 @@ var LineConnector = /** @class */ (function () {
                                         columns: event.attachments.map(function (a) {
                                             // Auto split text if too length.
                                             var text = a.content.text ? a.content.text : (a.content.subtitle ? a.content.subtitle : "");
-                                            text = text.slice(0, lineOpts.template.maxLengthText);
-                                            var title = a.content.title.slice(0, lineOpts.template.maxLengthTitle);
+                                            text = text.slice(0, lineOpts.template.carousel.maxLengthText);
+                                            var title = a.content.title.slice(0, lineOpts.template.carousel.maxLengthTitle);
                                             var c = {
                                                 title: title,
                                                 text: text,
@@ -756,13 +773,15 @@ var LineConnector = /** @class */ (function () {
                                 }
                                 if (a.content.images === undefined && a.content.buttons.length === 2) {
                                     //confirm template
+                                    var text = (a.content.subtitle || "") + " " + (a.content.text || "");
+                                    text = text.slice(0, lineOpts.template.confirm.maxLengthText);
                                     return {
                                         type: "template",
-                                        altText: getAltText(a.content.text),
+                                        altText: getAltText(text),
                                         template: {
                                             type: "confirm",
                                             title: a.content.title || "",
-                                            text: (a.content.subtitle || "") + " " + (a.content.text || ""),
+                                            text: text,
                                             actions: a.content.buttons.map(function (b) {
                                                 return getButtonTemp(b);
                                             })
@@ -771,13 +790,15 @@ var LineConnector = /** @class */ (function () {
                                 }
                                 else {
                                     // buttons template
+                                    var text = (a.content.subtitle || "") + " " + (a.content.text || "");
+                                    text = text.slice(0, lineOpts.template.buttons.maxLengthText);
                                     var t = {
                                         type: "template",
-                                        altText: a.content.text,
+                                        altText: text,
                                         template: {
                                             type: "buttons",
                                             title: a.content.title || "",
-                                            text: (a.content.subtitle || "") + " " + (a.content.text || ""),
+                                            text: text,
                                             actions: a.content.buttons.map(function (b) {
                                                 return getButtonTemp(b);
                                             })
@@ -854,4 +875,3 @@ var LineConnector = /** @class */ (function () {
     return LineConnector;
 }());
 exports.LineConnector = LineConnector;
-//# sourceMappingURL=LineConnector.js.map

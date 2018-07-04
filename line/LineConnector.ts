@@ -14,8 +14,26 @@ const VERIFY_TOKENS = [
 
 const lineOpts = {
   template: {
+    maxLengthAltText: 400,
     maxLengthTitle: 40,
     maxLengthText: 60,
+
+    carousel: {
+      maxLengthTitle: 40,
+      maxLengthTextNoImageOrTitle: 120, 
+      maxLengthText: 60, 
+      maxActions: 3,
+    },
+    confirm: {
+      maxLengthText: 240,
+      maxActions: 2,
+    },
+    buttons: {
+      maxLengthTitle: 40,
+      maxLengthTextNoImageOrTitle: 160, 
+      maxLengthText: 60, 
+      maxActions: 4,
+    }
   }
 };
 
@@ -629,8 +647,8 @@ export class LineConnector implements botbuilder.IConnector {
                                         columns: event.attachments.map(a => {
                                             // Auto split text if too length.
                                             let text = a.content.text ?  a.content.text : (a.content.subtitle ? a.content.subtitle : "");
-                                            text = text.slice(0, lineOpts.template.maxLengthText);
-                                            let title = a.content.title.slice(0, lineOpts.template.maxLengthTitle);
+                                            text = text.slice(0, lineOpts.template.carousel.maxLengthText);
+                                            let title = a.content.title.slice(0, lineOpts.template.carousel.maxLengthTitle);
 
                                             let c: any = {
                                                 title,
@@ -715,13 +733,15 @@ export class LineConnector implements botbuilder.IConnector {
 
                                 if (a.content.images === undefined && a.content.buttons.length === 2) {
                                     //confirm template
+                                    let text = `${a.content.subtitle || ""} ${a.content.text || ""}`;
+                                    text = text.slice(0, lineOpts.template.confirm.maxLengthText);
                                     return {
                                         type: "template",
-                                        altText: getAltText(a.content.text),
+                                        altText: getAltText(text),
                                         template: {
                                             type: "confirm",
                                             title: a.content.title || "",
-                                            text: `${a.content.subtitle || ""} ${a.content.text || ""}`,
+                                            text,
                                             actions: a.content.buttons.map(b =>
                                                 getButtonTemp(b)
                                             )
@@ -729,13 +749,15 @@ export class LineConnector implements botbuilder.IConnector {
                                     }
                                 } else {
                                     // buttons template
+                                    let text = `${a.content.subtitle || ""} ${a.content.text || ""}`;
+                                    text = text.slice(0, lineOpts.template.buttons.maxLengthText);
                                     let t: any = {
                                         type: "template",
-                                        altText: a.content.text,
+                                        altText: text,
                                         template: {
                                             type: "buttons",
                                             title: a.content.title || "",
-                                            text: `${a.content.subtitle || ""} ${a.content.text || ""}`,
+                                            text,
                                             actions: a.content.buttons.map(b =>
                                                 getButtonTemp(b)
                                             )
